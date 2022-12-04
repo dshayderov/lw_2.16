@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from jsonschema import validate
+import jsonschema
 import sys
 
 
@@ -16,9 +16,9 @@ def get_plane():
 
     # Создать словарь.
     return {
-        'destination': destination,
-        'num': num,
-        'typ': typ,
+        "destination": destination,
+        "num": num,
+        "typ": typ,
     }
 
 
@@ -29,19 +29,16 @@ def display_planes(staff):
     # Проверить, что список самолетов не пуст.
     if staff:
         # Заголовок таблицы.
-        line = '+-{}-+-{}-+-{}-+-{}-+'.format(
-            '-' * 4,
-            '-' * 30,
-            '-' * 20,
-            '-' * 15
+        line = "+-{}-+-{}-+-{}-+-{}-+".format(
+            "-" * 4,
+            "-" * 30,
+            "-" * 20,
+            "-" * 15
         )
         print(line)
         print(
-            '| {:^4} | {:^30} | {:^20} | {:^15} |'.format(
-                "No",
-                "Пункт назначения",
-                "Номер рейса",
-                "Тип самолета"
+            "| {:^4} | {:^30} | {:^20} | {:^15} |".format(
+                "No", "Пункт назначения", "Номер рейса", "Тип самолета"
             )
         )
         print(line)
@@ -49,11 +46,11 @@ def display_planes(staff):
         # Вывести данные о всех самолетах.
         for idx, plane in enumerate(staff, 1):
             print(
-                '| {:>4} | {:<30} | {:<20} | {:>15} |'.format(
+                "| {:>4} | {:<30} | {:<20} | {:>15} |".format(
                     idx,
-                    plane.get('destination', ''),
-                    plane.get('num', 0),
-                    plane.get('typ', '')
+                    plane.get("destination", ""),
+                    plane.get("num", 0),
+                    plane.get("typ", ""),
                 )
             )
 
@@ -68,7 +65,7 @@ def select_planes(staff, jet):
     Выбрать самолеты с заданным типом.
     """
     # Сформировать список самолетов.
-    result = [plane for plane in staff if jet == plane.get('typ', '')]
+    result = [plane for plane in staff if jet == plane.get("typ", "")]
 
     # Возвратить список выбранных самолетов.
     return result
@@ -89,9 +86,33 @@ def load_planes(file_name):
     """
     Загрузить все самолеты из файла JSON.
     """
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "array",
+        "items": [
+            {
+                "type": "object",
+                "properties": {
+                    "destination": {"type": "string"},
+                    "num": {"type": "integer"},
+                    "typ": {"type": "string"},
+                },
+                "required": ["destination", "num", "typ"],
+            }
+        ],
+    }
+
     # Открыть файл с заданным именем для чтения.
     with open(file_name, "r", encoding="utf-8") as fin:
-        return json.load(fin)
+        loadfile = json.load(fin)
+        validator = jsonschema.Draft7Validator(schema)
+        try:
+            if not validator.validate(loadfile):
+                print("Валидация прошла успешно")
+        except jsonschema.exceptions.ValidationError:
+            print("Ошибка валидации", list(validator.iter_errors(loadfile)))
+            exit()
+    return loadfile
 
 
 def main():
@@ -107,10 +128,10 @@ def main():
         command = input(">>> ").lower()
 
         # Выполнить действие в соответствие с командой.
-        if command == 'exit':
+        if command == "exit":
             break
 
-        elif command == 'add':
+        elif command == "add":
             # Запросить данные о самолете.
             plane = get_plane()
 
@@ -118,15 +139,15 @@ def main():
             planes.append(plane)
             # Отсортировать список в случае необходимости.
             if len(planes) > 1:
-                planes.sort(key=lambda item: item.get('destination', ''))
+                planes.sort(key=lambda item: item.get("destination", ""))
 
-        elif command == 'list':
+        elif command == "list":
             # Отобразить все самолеты.
             display_planes(planes)
 
-        elif command.startswith('select '):
+        elif command.startswith("select "):
             # Разбить команду на части для выделения пункта назначения.
-            part = command.split(' ', maxsplit=1)
+            part = command.split(" ", maxsplit=1)
             com = part[1]
 
             # Выбрать самолеты заданного типа
@@ -152,26 +173,7 @@ def main():
             # Сохранить данные в файл с заданным именем.
             planes = load_planes(file_name)
 
-            # Выполнить валидацию загруженных данных
-            schema = {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "minProperties": 3,
-                    "maxProperties": 3,
-                    "properties": {
-                        "destination": {"type": "string"},
-                        "num": {"type": "integer"},
-                        "typ": {"type": "string"}
-                    },
-                    "required": ["destination", "num", "typ"]
-                }
-            }
-
-            validate(planes, schema)
-
-        elif command == 'help':
+        elif command == "help":
             # Вывести справку о работе с программой.
             print("Список команд:\n")
             print("add - добавить самолет;")
@@ -183,5 +185,5 @@ def main():
             print(f"Неизвестная команда {command}", file=sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

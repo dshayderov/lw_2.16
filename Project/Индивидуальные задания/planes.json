@@ -1,0 +1,12 @@
+[
+    {
+        "destination": "fref",
+        "num": 456,
+        "typ": "dfg"
+    },
+    {
+        "destination": "lkf",
+        "num": 123,
+        "typ": "dff"
+    }
+]
